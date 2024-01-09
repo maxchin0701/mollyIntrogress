@@ -15,17 +15,8 @@ colnames(intervals) <- c("scaff","start","end")
 intervals$scaff <- as.factor(intervals$scaff)
 
 #### COLLECT SAMPLE NAMES ####
-samps <- c()
-sampDirs <- list.dirs(path='../outputs/gcnv')[-1]
-
-for(i in 1:length(sampDirs)){
-  if(strsplit(sampDirs[i],split="/")[[1]][4] == "rawCalls"){
-    next()
-  }
-  samps <- c(samps,strsplit(sampDirs[i],split="/")[[1]][4])
-}
-
-rm(sampDirs,i)
+samps <- names(introgressRegionsAll)
+sampIndices <- c(0,1,2,3,5,8,9,10)
 
 #### GET LIST OF ALL SCAFFOLDS THAT HAVE BEEN INTROGRESSED ####
 introgressScaffs <- c()
@@ -64,7 +55,7 @@ for(i in 1:length(introgressScaffs)){
     #load data for current sample
     muDCR <- read.delim(paste0("../outputs/gcnv/rawCalls/",
                                intervalSize,
-                               "/SAMPLE_",j-1,"/mu_denoised_copy_ratio_t.tsv"),
+                               "/SAMPLE_",sampIndices[j],"/mu_denoised_copy_ratio_t.tsv"),
                         sep="\t",row.names = NULL)
     muDCR <- as.numeric(muDCR[4:nrow(muDCR),1])
     

@@ -1,6 +1,6 @@
 #### PACKAGES ####
 #### READ IN INTERVALS ####
-intervals <- read.delim("../data/refGenome/PFo.bed",sep="\t",row.names = NULL,header = F)
+intervals <- read.delim("../data/refGenome/PFo10kb.bed",sep="\t",row.names = NULL,header = F)
 
 #### MAKE OBJECTS TO STORE ####
 introgressRegionsAll <- list()
@@ -17,6 +17,8 @@ for(i in 1:length(sampDirs)){
 }
 
 rm(sampDirs,i)
+
+#remove poor sequencing/duplicate samples
  
 #### LOOP THROUGH SAMPLES ####
 for(i in 1:length(samps)){
@@ -98,6 +100,9 @@ for(i in 1:length(samps)){
   names(introgressRegionsAll)[i] <- samps[i]
   
 }
+
+#remove poor sequencing/duplicate samples
+introgressRegionsAll <- introgressRegionsAll[-c(5,7,8)]
 
 #### SAVE R OBJECT ####
 save(introgressRegionsAll,file="../outputs/gcnv/introgressList.RData")

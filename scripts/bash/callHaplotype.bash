@@ -12,7 +12,7 @@ conda activate genomics
 
 #get into right directory
 cd ../data/alignedGenomes
-c
+
 for i in  $(ls -d */); do
 (
 
@@ -21,14 +21,14 @@ for i in  $(ls -d */); do
 
 	#change into directory for current sample
 	cd ./$curSamp
-
+	
 	gatk --java-options "-Xms20G -Xmx20G -XX:ParallelGCThreads=2" HaplotypeCaller \
 		-R ../../refGenome/GCF_000485575.1_Poecilia_formosa-5.1.2_genomic.fna \
 		-I ./$curSamp\SortedDupMarked.bam \
 		-L ../../refGenome/putIntro.interval_list \
 		-O ../../variantCalls/haplotypes/$curSamp\/$curSamp\Introgress.vcf.gz \
 		-ERC GVCF
-
+	
 	cd ..
 )
 done
@@ -42,14 +42,12 @@ gatk GenomicsDBImport \
 	-V Amm090/Amm090Introgress.vcf.gz \
 	-V Amm092/Amm092Introgress.vcf.gz \
 	-V Amm105/Amm105Introgress.vcf.gz \
-	-V San026/San026Introgress.vcf.gz \
 	-V San114/San114Introgress.vcf.gz \
-	-V San114N/San114NIntrogress.vcf.gz \
-	-V V088/V088Introgress.vcf.gz \
 	-V V129/V129Introgress.vcf.gz \
 	-V Wes109/Wes109Introgress.vcf.gz \
 	-V Wes123/Wes123Introgress.vcf.gz \
 	--genomicsdb-workspace-path ../genDBAll \
+	-L ../../refGenome/putIntro.interval_list
 
 
 
