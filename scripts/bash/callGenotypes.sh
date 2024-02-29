@@ -14,18 +14,21 @@ module load bcftools
 #get into right directory
 cd ../data/variantCalls
 
+#take in argurment for fixed or variable ploidy prior table
+ploidy=$1;
+
 #call genotypes
 gatk GenotypeGVCFs \
 	-R ../refGenome/GCF_000485575.1_Poecilia_formosa-5.1.2_genomic.fna \
-	-V gendb://genDBAll \
-	-O ../../outputs/variantCalls/allIntrogress.vcf.gz
+	-V gendb://genDB$ploidy \
+	-O ../../outputs/variantCalls/allIntrogress$ploidy\.vcf.gz
 
 cd ../../outputs/variantCalls
 
 #filter vcf
 bcftools filter \
-	-i 'QUAL>30 && MEAN(FORMAT/DP)>5 && Type="snp" && GT="het"' \
-	allIntrogress.vcf.gz | \
-	bcftools view -m2 -M2 -q 0.5:minor -v snps -o allIntrogressFilt.vcf.gz
+	-i 'QUAL>30 && MEAN(FORMAT/DP)>30 && Type="snp" && GT="het"' \
+	allIntrogress$ploidy\.vcf.gz | \
+	bcftools view -m2 -M2 -q 0.5:minor -v snps -o allIntrogress$ploidy\Filt.vcf.gz
 
 

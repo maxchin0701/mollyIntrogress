@@ -1,12 +1,16 @@
 #### PACKAGES ####
 library(vcfR)
+library(ggplot2)
 
 #### LOAD IN DATA ####
+#sprcify variable or fixed ploidy analysis
+ploidy <- "Var"
+
 #variants
-dat <-  read.vcfR("../outputs/variantCalls/allIntrogressFilt.vcf.gz")
+dat <-  read.vcfR(paste0("../outputs/variantCalls/allIntrogress",ploidy,"Filt.vcf.gz"))
 
 #introgressed regions
-load("../outputs/gcnv/introgressList.RData")
+load(paste0("../outputs/gcnv/introgressList",ploidy,".RData"))
 
 #### EXTRACT ALLELE DEPTH ####
 allDepths <- extract.gt(dat,element="AD")
@@ -37,7 +41,7 @@ samps <- vector("list",2000000)
 index <- 1
 
 for(i in 1:8){
-curSamp <- colnames(allDepths)[i]
+  curSamp <- colnames(allDepths)[i]
   for(j in 1:nrow(allDepths)){
     refDepth <- as.numeric(strsplit(allDepths[j,i],split=",")[[1]][1])
     totalDepth <- as.numeric(strsplit(allDepths[j,i],split=",")[[1]][1]) + 
@@ -100,8 +104,9 @@ for(i in 1:length(introgressScaffs)){
                                     hjust=0.5))
   
   #save plot
-  ggsave(curScaff,
+  ggsave(curScaffPlot,
          filename = paste0("../figures/alleleBias/",
+                           tolower(ploidy),"/",
                            introgressScaffs[i],
                            ".pdf"),
          width = 7.47,

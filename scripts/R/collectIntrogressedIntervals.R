@@ -1,4 +1,5 @@
 #### PACKAGES ####
+library(stringr)
 #### READ IN INTERVALS ####
 intervals <- read.delim("../data/refGenome/PFo10kb.bed",sep="\t",row.names = NULL,header = F)
 
@@ -18,18 +19,18 @@ for(i in 1:length(sampDirs)){
 
 rm(sampDirs,i)
 
-#remove poor sequencing/duplicate samples
- 
+#set fixed or variable ploidy
+ploidy <- "var"
 #### LOOP THROUGH SAMPLES ####
 for(i in 1:length(samps)){
   
   #### READ IN COPY COUNTS FOR CURRENT SAMPLE ####
   #read in raw copy counts
-  rawCNV <- read.delim(paste0("../outputs/gcnv/rawCalls/10kb/SAMPLE_",i-1,"/baseline_copy_number_t.tsv"),sep="\t",row.names = NULL)
+  rawCNV <- read.delim(paste0("../outputs/gcnv/rawCalls/10kb/",ploidy,"/SAMPLE_",i-1,"/baseline_copy_number_t.tsv"),sep="\t",row.names = NULL)
   rawCNV <- as.numeric(rawCNV[4:nrow(rawCNV),1])
   
   #read in mean denoised copy ratios
-  muDCR <- read.delim(paste0("../outputs/gcnv/rawCalls/10kb/SAMPLE_",i-1,"/mu_denoised_copy_ratio_t.tsv"),sep="\t",row.names = NULL)
+  muDCR <- read.delim(paste0("../outputs/gcnv/rawCalls/10kb/",ploidy,"/SAMPLE_",i-1,"/mu_denoised_copy_ratio_t.tsv"),sep="\t",row.names = NULL)
   muDCR <- as.numeric(muDCR[4:nrow(muDCR),1])
   
   #bind raw CNV to intervals
@@ -63,7 +64,8 @@ for(i in 1:length(samps)){
       #keep moving until we reach the next diploid interval
       while((intervalCNVs[index+indexInternal,5] >= 2.25 || 
              intervalCNVs[index+indexInternal,5] <= 0) &&
-            intervalCNVs[index + indexInternal,1] == intervalCNVs[index,1]){
+            intervalCNVs[index + indexInternal,1] == intervalCNVs[index,1] &&
+            index + indexInternal <= nrow(intervalCNVs)){
         indexInternal <- indexInternal + 1
       }
       
@@ -105,4 +107,4 @@ for(i in 1:length(samps)){
 introgressRegionsAll <- introgressRegionsAll[-c(5,7,8)]
 
 #### SAVE R OBJECT ####
-save(introgressRegionsAll,file="../outputs/gcnv/introgressList.RData")
+save(introgressRegionsAll,file=paste0("../outputs/gcnv/introgressList",str_to_title(ploidy),".RData"))

@@ -2,10 +2,12 @@
 library(ggplot2)
 
 #### LOAD LIST OF INTRGORESSED REGIONS ####
-load("../outputs/gcnv/introgressList.RData")
+ploidy <- "var"
+load(paste0("../outputs/gcnv/introgressList",ploidy,".RData"))
 
-#### SET INTERVAL SIZE  ####
-intervalSize <- "10kb"
+#### SET INTERVAL SIZE  AND FIX/VARIABLE PLOIDY####
+intervalSize <- "1kb"
+
 #### READ IN INTERVALS ####
 
 #change this depending on if youre looking at 1kb vs 10kb intervals
@@ -30,14 +32,14 @@ for(i in 1:length(introgressRegionsAll)){
 introgressScaffs <- unique(introgressScaffs)
 
 #gather scaffolds larger than 1Mb
-mbScaffolds <- c()
-
-for(i in levels(intervals$scaff)){
-  scaffInts <- subset(intervals, scaff==i)
-  if(max(scaffInts$end) >= 1000000){
-    mbScaffolds <- c(mbScaffolds,i)
-  }
-}
+# mbScaffolds <- c()
+# 
+# for(i in levels(intervals$scaff)){
+#   scaffInts <- subset(intervals, scaff==i)
+#   if(max(scaffInts$end) >= 1000000){
+#     mbScaffolds <- c(mbScaffolds,i)
+#   }
+# }
 
 #### PLOT ####
 
@@ -55,7 +57,7 @@ for(i in 1:length(introgressScaffs)){
     #load data for current sample
     muDCR <- read.delim(paste0("../outputs/gcnv/rawCalls/",
                                intervalSize,
-                               "/SAMPLE_",sampIndices[j],"/mu_denoised_copy_ratio_t.tsv"),
+                               "/",ploidy,"/SAMPLE_",sampIndices[j],"/mu_denoised_copy_ratio_t.tsv"),
                         sep="\t",row.names = NULL)
     muDCR <- as.numeric(muDCR[4:nrow(muDCR),1])
     
@@ -158,7 +160,7 @@ for(i in 1:length(introgressScaffs)){
   ggsave(curScaff,
          filename = paste0("../figures/introgressScaffolds/",
                            intervalSize,
-                           "/",
+                           "/",ploidy,"/",
                            introgressScaffs[i],
                            ".pdf"),
          width = 7.47,
@@ -174,7 +176,7 @@ ggplot(data=dat,aes(x=samp,y=cn))+
   labs(color=introgressScaffs[i])+
   ylab("Copy number")+
   xlab("Position")+
-  ylim(1.5,4)+
+  ylim(1.5,6)+
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background= element_blank(),

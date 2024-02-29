@@ -1,4 +1,5 @@
 #### PACKAGES ####
+library(stringr)
 #### LOAD IN DATA ####
 
 #intervals
@@ -7,7 +8,8 @@ genomicIntervals <- read.table("../data/refGenome/PFo10kb.bed",
                                sep="\t",stringsAsFactors=FALSE)
 
 #introgressed regions
-load("../outputs/gcnv/introgressList.RData")
+ploidy <- "var"
+load(paste0("../outputs/gcnv/introgressList",ploidy,".RData"))
 
 #### GET LIST OF ALL SCAFFOLDS THAT HAVE BEEN INTROGRESSED ####
 introgressScaffs <- c()
@@ -25,5 +27,5 @@ introScaffIntervals <- genomicIntervals[which(genomicIntervals[,1] %in%
                                                 introgressScaffs),]
 
 #### SAVE BED ####
-write.table(introScaffIntervals,"../data/refGenome/putIntro.bed",
+write.table(introScaffIntervals,paste0("../data/refGenome/putIntro",str_to_title(ploidy),".bed"),
             sep="\t",quote=F,row.names = F,col.names = F)
