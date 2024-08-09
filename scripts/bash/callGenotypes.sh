@@ -19,7 +19,7 @@ ploidy=$1;
 
 #call genotypes
 gatk GenotypeGVCFs \
-	-R ../refGenome/GCF_000485575.1_Poecilia_formosa-5.1.2_genomic.fna \
+	-R ../refGenome/PFor.masked.fasta \
 	-V gendb://genDB$ploidy \
 	-O ../../outputs/variantCalls/allIntrogress$ploidy\.vcf.gz
 

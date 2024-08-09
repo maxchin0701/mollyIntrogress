@@ -4,7 +4,7 @@ library(ggplot2)
 
 #### LOAD IN DATA ####
 #sprcify variable or fixed ploidy analysis
-ploidy <- "Var"
+ploidy <- "Fix"
 
 #variants
 dat <-  read.vcfR(paste0("../outputs/variantCalls/allIntrogress",ploidy,"Filt.vcf.gz"))
@@ -87,7 +87,7 @@ for(i in 1:length(introgressScaffs)){
     scale_fill_viridis_d()+
     labs(fill=paste0(introgressScaffs[i],"\n",posMin," - ",posMax))+
     ylab("Density")+
-    xlab("Reference allele frequency")+
+    xlab("Reference allele relative depth")+
     xlim(0,1)+
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -95,7 +95,7 @@ for(i in 1:length(introgressScaffs)){
           axis.line = element_line(colour = "black"),
           axis.text.y = element_text(size = 10),
           axis.title = element_text(face = "bold",
-                                    size = 10),
+                                    size = 20),
           legend.title = element_text(face = "bold",
                                       size = 10),
           legend.key=element_blank(),
@@ -103,6 +103,7 @@ for(i in 1:length(introgressScaffs)){
                                     size = 17,
                                     hjust=0.5))
   
+  plot(curScaffPlot)
   #save plot
   ggsave(curScaffPlot,
          filename = paste0("../figures/alleleBias/",

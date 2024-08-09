@@ -11,6 +11,6 @@ bedFile=$1;
 
 gatk BedToIntervalList I=../data/refGenome/$bedFile\.bed \
 	O=../data/refGenome/$bedFile\.interval_list \
-	SD=../data/refGenome/GCF_000485575.1_Poecilia_formosa-5.1.2_genomic.dict
+	SD=../data/refGenome/PFor.masked.dict
 
 

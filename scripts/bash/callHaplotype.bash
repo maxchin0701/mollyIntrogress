@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -p RM-shared
-#SBATCH -t 48:00:00
+#SBATCH -t 60:00:00
 #SBATCH --ntasks-per-node=30
 #SBATCH -o callHaps
 
@@ -17,19 +17,25 @@ ploidy=$1;
 cd ../data/alignedGenomes
 
 for i in  $(ls -d */); do
-(
+(	
+	#skip poor quality samples
+	if [[ "$i" = "San114N/" || "$i" = "San026/" || "$i" = "V088/" ]] ; then
+		continue
+    fi
+
 	#get current sample
 	curSamp=${i::-1}
 
 	#change into directory for current sample
 	cd ./$curSamp
-	
+
 	gatk --java-options "-Xms20G -Xmx20G -XX:ParallelGCThreads=2" HaplotypeCaller \
-		-R ../../refGenome/GCF_000485575.1_Poecilia_formosa-5.1.2_genomic.fna \
+		-R ../../refGenome/PFor.masked.fasta \
 		-I ./$curSamp\SortedDupMarked.bam \
 		-L ../../refGenome/putIntro$ploidy\.interval_list \
 		-O ../../variantCalls/haplotypes/$curSamp\/$curSamp\Introgress$ploidy\.vcf.gz \
-		-ERC GVCF
+		-ERC GVCF \
+		--native-pair-hmm-threads 30
 	
 	cd ..
 )

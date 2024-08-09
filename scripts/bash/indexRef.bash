@@ -13,4 +13,4 @@ conda activate genomics
 cd ../data/refGenome
 
 #index genome file
-bwa-mem2 index GCF_000485575.1_Poecilia_formosa-5.1.2_genomic.fna
+bwa-mem2 index PFor.masked.fasta

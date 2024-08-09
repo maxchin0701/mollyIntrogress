@@ -1,8 +1,9 @@
 #### PACKAGES ####
 library(ggplot2)
+library(coda)
 
 #### LOAD LIST OF INTRGORESSED REGIONS ####
-ploidy <- "var"
+ploidy <- "fix"
 load(paste0("../outputs/gcnv/introgressList",ploidy,".RData"))
 
 #### SET INTERVAL SIZE  AND FIX/VARIABLE PLOIDY####
@@ -18,7 +19,6 @@ intervals$scaff <- as.factor(intervals$scaff)
 
 #### COLLECT SAMPLE NAMES ####
 samps <- names(introgressRegionsAll)
-sampIndices <- c(0,1,2,3,5,8,9,10)
 
 #### GET LIST OF ALL SCAFFOLDS THAT HAVE BEEN INTROGRESSED ####
 introgressScaffs <- c()
@@ -57,7 +57,7 @@ for(i in 1:length(introgressScaffs)){
     #load data for current sample
     muDCR <- read.delim(paste0("../outputs/gcnv/rawCalls/",
                                intervalSize,
-                               "/",ploidy,"/SAMPLE_",sampIndices[j],"/mu_denoised_copy_ratio_t.tsv"),
+                               "/",ploidy,"/SAMPLE_",j-1,"/mu_denoised_copy_ratio_t.tsv"),
                         sep="\t",row.names = NULL)
     muDCR <- as.numeric(muDCR[4:nrow(muDCR),1])
     
@@ -90,35 +90,27 @@ for(i in 1:length(introgressScaffs)){
   
   #### PLOT ####
   
-  #set xlims if necessary
-  if(intervalSize == "1kb" &&
-     max(dat$pos) >= 1000000){
-    introgressRegionsDf <- data.frame()
-    for(j in 1:length(introgressRegionsAll)){
-      introgressRegionsDf <- rbind(introgressRegionsDf,introgressRegionsAll[[j]])
-    }
-    introgressRegionsDf <- subset(introgressRegionsDf,scaff==introgressScaffs[i])
-    xmin <- min(as.numeric(introgressRegionsDf$start)) - 100000
-    xmax <- max(as.numeric(introgressRegionsDf$end)) + 100000
-    if(xmin < 0){
-      xmin <- 0
-    } 
-    if(xmax > max(dat$pos)){
-      xmax <- max(dat$pos)
-    }
-  } else {
+  introgressRegionsDf <- data.frame()
+  for(j in 1:length(introgressRegionsAll)){
+    introgressRegionsDf <- rbind(introgressRegionsDf,introgressRegionsAll[[j]])
+  }
+  introgressRegionsDf <- subset(introgressRegionsDf,scaff==introgressScaffs[i])
+  xmin <- min(as.numeric(introgressRegionsDf$start)) - 100000
+  xmax <- max(as.numeric(introgressRegionsDf$end)) + 100000
+  if(xmin < 0){
     xmin <- 0
+  } 
+  if(xmax > max(dat$pos)){
     xmax <- max(dat$pos)
   }
   
-  if(intervalSize == "1kb"){
-    curScaff <- ggplot(data=dat,aes(x=pos,y=cn))+
-      geom_line(mapping=aes(color=dat$samp))+
+  curScaff <- ggplot(data=dat,aes(x=pos,y=cn))+
+      geom_line(mapping=aes(color=dat$samp),alpha=0.75)+
       scale_color_viridis_d()+
       labs(color=introgressScaffs[i])+
       ylab("Copy number")+
       xlab("Position")+
-      ylim(0,5)+
+      ylim(NA,max=5)+
       xlim(xmin,xmax)+
       theme(panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
@@ -126,36 +118,14 @@ for(i in 1:length(introgressScaffs)){
             axis.line = element_line(colour = "black"),
             axis.text.y = element_text(size = 10),
             axis.title = element_text(face = "bold",
-                                      size = 10),
+                                      size = 20),
             legend.title = element_text(face = "bold",
                                         size = 10),
             legend.key=element_blank(),
             plot.title = element_text(face = "bold",
                                       size = 17,
                                       hjust=0.5))
-  } else {
-    curScaff <- ggplot(data=dat,aes(x=pos,y=cn))+
-      geom_line(mapping=aes(color=dat$samp))+
-      scale_color_viridis_d()+
-      labs(color=introgressScaffs[i])+
-      ylab("Copy number")+
-      xlab("Position")+
-      ylim(1,4)+
-      theme(panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.background= element_blank(),
-            axis.line = element_line(colour = "black"),
-            axis.text.y = element_text(size = 10),
-            axis.title = element_text(face = "bold",
-                                      size = 10),
-            legend.title = element_text(face = "bold",
-                                        size = 10),
-            legend.key=element_blank(),
-            plot.title = element_text(face = "bold",
-                                      size = 17,
-                                      hjust=0.5))
-  }
-  
+    
   #### SAVE PLOT ####
   ggsave(curScaff,
          filename = paste0("../figures/introgressScaffolds/",
@@ -169,24 +139,49 @@ for(i in 1:length(introgressScaffs)){
   
 }
 
-#### PRETTY SCAFFOLD ####
-ggplot(data=dat,aes(x=samp,y=cn))+
-  geom_boxplot(mapping=aes(color=dat$samp))+
+#### BOXPLOT ####
+datBox <- subset(dat, pos>=min(as.numeric(introgressRegionsDf$start)) & 
+                   pos<=max(as.numeric(introgressRegionsDf$end)))
+
+hpdInts <- as.data.frame(matrix(NA,0,3))
+counter=1
+for(i in levels(dat$samp)){
+  hpdInts <- rbind(hpdInts,
+                   cbind(counter-0.4,
+                         HPDinterval(as.mcmc(datBox[which(datBox$samp == i),2]))[1],
+                         i),
+                   cbind(counter-0.4,
+                         HPDinterval(as.mcmc(datBox[which(datBox$samp == i),2]))[2],
+                         i))
+  counter = counter + 1
+}
+
+ggplot()+
+  geom_jitter(mapping=aes(x=datBox$samp,y=datBox$cn,color=datBox$samp),alpha=0.4,
+              position = position_jitter(width = .2,height=0))+
+  geom_line(mapping=aes(x=as.numeric(hpdInts[,1]),y=as.numeric(hpdInts[,2]),
+                        color=as.factor(hpdInts[,3])),
+            show.legend = F,
+            size=1)+
   scale_color_viridis_d()+
-  labs(color=introgressScaffs[i])+
+  labs(color=paste0("LG3_Pf","\n",
+                    min(as.numeric(introgressRegionsDf$start)),"-",
+                    max(as.numeric(introgressRegionsDf$end))))+
   ylab("Copy number")+
-  xlab("Position")+
-  ylim(1.5,6)+
+  xlab("Sample")+
+  ylim(0,5)+
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background= element_blank(),
         axis.line = element_line(colour = "black"),
         axis.text.y = element_text(size = 10),
         axis.title = element_text(face = "bold",
-                                  size = 10),
+                                  size = 20),
         legend.title = element_text(face = "bold",
                                     size = 10),
         legend.key=element_blank(),
         plot.title = element_text(face = "bold",
                                   size = 17,
                                   hjust=0.5))
+
+

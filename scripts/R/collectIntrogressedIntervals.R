@@ -1,36 +1,37 @@
 #### PACKAGES ####
 library(stringr)
 #### READ IN INTERVALS ####
-intervals <- read.delim("../data/refGenome/PFo10kb.bed",sep="\t",row.names = NULL,header = F)
+#set interval size and ploidy
+size <- "1kb"
+ploidy <- "fix"
+
+intervals <- read.delim(paste0("../data/refGenome/PFo",size,".bed"),
+                        sep="\t",row.names = NULL,header = F)
 
 #### MAKE OBJECTS TO STORE ####
 introgressRegionsAll <- list()
 
 #### COLLECT SAMPLE NAMES ####
 samps <- c()
-sampDirs <- list.dirs(path='../outputs/gcnv')[-1]
+sampDirs <- list.dirs(path=paste0("../outputs/gcnv/rawCalls/",size,"/",ploidy))[-1]
 
-for(i in 1:length(sampDirs)){
-  if(strsplit(sampDirs[i],split="/")[[1]][4] == "rawCalls"){
-    next()
-  }
-  samps <- c(samps,strsplit(sampDirs[i],split="/")[[1]][4])
+for(i in sampDirs){
+  samps <- c(samps,
+             names(read.delim(paste0(i,"/sample_name.txt"))))
 }
 
-rm(sampDirs,i)
+#rm(sampDirs,i)
 
-#set fixed or variable ploidy
-ploidy <- "var"
 #### LOOP THROUGH SAMPLES ####
 for(i in 1:length(samps)){
   
   #### READ IN COPY COUNTS FOR CURRENT SAMPLE ####
   #read in raw copy counts
-  rawCNV <- read.delim(paste0("../outputs/gcnv/rawCalls/10kb/",ploidy,"/SAMPLE_",i-1,"/baseline_copy_number_t.tsv"),sep="\t",row.names = NULL)
+  rawCNV <- read.delim(paste0(sampDirs[i],"/baseline_copy_number_t.tsv"),sep="\t",row.names = NULL)
   rawCNV <- as.numeric(rawCNV[4:nrow(rawCNV),1])
   
   #read in mean denoised copy ratios
-  muDCR <- read.delim(paste0("../outputs/gcnv/rawCalls/10kb/",ploidy,"/SAMPLE_",i-1,"/mu_denoised_copy_ratio_t.tsv"),sep="\t",row.names = NULL)
+  muDCR <- read.delim(paste0(sampDirs[i],"/mu_denoised_copy_ratio_t.tsv"),sep="\t",row.names = NULL)
   muDCR <- as.numeric(muDCR[4:nrow(muDCR),1])
   
   #bind raw CNV to intervals
@@ -52,7 +53,7 @@ for(i in 1:length(samps)){
   #use while loop to iterate
   while(index <= nrow(intervalCNVs)){
     #if statement to check if current interval has copy number three
-    if(intervalCNVs[index,5] >= 2.25 && 
+    if(intervalCNVs[index,5] >= 2.5 && 
        intervalCNVs[index,5] <= 3.5){
       
       #record beginning of introgressed region
@@ -62,7 +63,7 @@ for(i in 1:length(samps)){
       indexInternal <- 0
       
       #keep moving until we reach the next diploid interval
-      while((intervalCNVs[index+indexInternal,5] >= 2.25 || 
+      while((intervalCNVs[index+indexInternal,5] >= 2.5 || 
              intervalCNVs[index+indexInternal,5] <= 0) &&
             intervalCNVs[index + indexInternal,1] == intervalCNVs[index,1] &&
             index + indexInternal <= nrow(intervalCNVs)){
@@ -72,7 +73,7 @@ for(i in 1:length(samps)){
       #record end of introgressed region
       introgressEnd <- index + indexInternal - 1
       
-      if(indexInternal >= 11){
+      if(indexInternal >= 100){
         
         #append each to respective lists
         scaff[[length(scaff) + 1]] <- intervalCNVs[introgressBegin,1]
@@ -102,9 +103,6 @@ for(i in 1:length(samps)){
   names(introgressRegionsAll)[i] <- samps[i]
   
 }
-
-#remove poor sequencing/duplicate samples
-introgressRegionsAll <- introgressRegionsAll[-c(5,7,8)]
 
 #### SAVE R OBJECT ####
 save(introgressRegionsAll,file=paste0("../outputs/gcnv/introgressList",str_to_title(ploidy),".RData"))
