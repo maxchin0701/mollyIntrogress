@@ -1,9 +1,4 @@
-#### LIBRARIES ####
 library(vcfR)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
 #### READ DATA ####
 dat <- read.vcfR("../data/Amm_ammgenome.var4.contiglist.1-1000.vcf")
 

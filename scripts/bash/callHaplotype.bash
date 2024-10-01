@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -p RM-shared
-#SBATCH -t 60:00:00
-#SBATCH --ntasks-per-node=30
+#SBATCH -t 72:00:00
+#SBATCH --ntasks-per-node=2
 #SBATCH -o callHaps
 
 #activate conda env
@@ -34,9 +34,7 @@ for i in  $(ls -d */); do
 		-I ./$curSamp\SortedDupMarked.bam \
 		-L ../../refGenome/putIntro$ploidy\.interval_list \
 		-O ../../variantCalls/haplotypes/$curSamp\/$curSamp\Introgress$ploidy\.vcf.gz \
-		-ERC GVCF \
-		--native-pair-hmm-threads 30
-	
+		-ERC GVCF	
 	cd ..
 )
 done
